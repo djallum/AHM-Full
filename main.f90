@@ -351,8 +351,9 @@ contains
        end if
        
        CALL DiagCluster(ClusterSize,4**ClusterSize,E,Cont,Weight,ChemPot,uSite,hop)
+       Weight = ClusterSize*Weight
        if ( ClusterSize .le. DOSCl ) then
-          CALL Bin_Data(Dos(:,1+ClusterSize),Cont,ClusterSize*Weight, tempDrop, tempDrop, DoSMax, DoSMin)
+          CALL Bin_Data(Dos(:,1+ClusterSize),Cont,Weight, tempDrop, tempDrop, DoSMax, DoSMin)
        end if
        Teff = 0
        SitesRemoved = SitesRemoved + ClusterSize
@@ -370,6 +371,8 @@ contains
        Teff = 0
        
     end if
+
+    
     
   end subroutine GetDos
 
@@ -438,7 +441,7 @@ contains
        end do
        
 
-       weakL = Order(row,2); weakR = Order(row,3)
+       weakL = int(Order(row,2)); weakR = int(Order(row,3))
 
        deallocate(Order,Temp)
     else if ( numCluster .eq. 0 ) then
@@ -528,7 +531,7 @@ contains
           CALL GetDoS( SitePotential, Teff, ClusterSize &                 ! Call the Get_DoS routine to calculate the contributions and their weights to the DoS
                , Cont, Weight, weakL, weakR, SitesRemoved, SitesIgnored )  
 
-          CALL Bin_Data( Dos(:,1), Cont, ClusterSize*Weight, &                   ! Bin the contributions based on their weights using the Bin_Data routine
+          CALL Bin_Data( Dos(:,1), Cont, Weight, &                   ! Bin the contributions based on their weights using the Bin_Data routine
                DroppedDos,TotalDos, DoSMax, DoSMin )
           
           !print*, DoS
@@ -594,8 +597,8 @@ contains
     weakL = WeakBonds(1); weakR = WeakBonds(1)
  
     CALL GetDoS( SitePotential, Teff, ClusterSize &
-         , Cont, Weight, weakL, weakR, SitesRemoved, SitesIgnored ) 
-    CALL Bin_Data( DoS(:,1), Cont, ClusterSize*Weight, DroppedDos, TotalDos, DoSMax, DoSMin )
+         , Cont, Weight, weakL, weakR, SitesRemoved, SitesIgnored )
+    CALL Bin_Data( DoS(:,1), Cont, Weight, DroppedDos, TotalDos, DoSMax, DoSMin )
         
     
   end subroutine Full_DoS
@@ -734,6 +737,47 @@ contains
     
    
   end subroutine resize_array
+
+   subroutine OpenFile( Unum, Name, Contents, Column1, Column2 )
+    implicit none
+    integer, intent(in) :: Unum
+    character(len=*), intent(in) :: Name, Contents, Column1, Column2
+    character(len=25) :: filename
+    filename = Name
+    filename = FileNamer(filename)
+    open (unit = Unum, file = filename ,status ='unknown' )
+    
+    
+    write(Unum,*) "#This file contains the following data type for the ensemble: ", Trim(Contents)
+    write(Unum,*) "#First column is: ", Trim(Column1)
+    write(Unum,*) "#Second column is: ", Trim(Column2)
+    write(Unum,*) "#Disorder Strength = ", DELTA
+    write(Unum,*) "#Bond Cutoff = ", bond_cutoff
+    write(Unum,*) "#Hopping = ", hop
+    write(Unum,*) "#Interaction strength = ", uSite
+    write(Unum,*) "#Dimensions = ", dim
+    write(Unum,*) "#Number of systems = ", systemn
+
+  end subroutine OpenFile
+
+  !
+  ! Prints data to file with unit number, Unum. Inputs: Unum = unit number for file, Form = format for the data, Bins array: xaxis, Data = Data.
+  !
+  
+  subroutine PrintData( Unum, Form, xaxis, Data )
+    implicit none
+    integer, intent(in) :: Unum
+    character(len=*), intent(in) :: Form
+    real, intent(in) :: xaxis(bins), Data(bins)
+    real :: BinWidth
+    integer :: Loop1
+    
+    BinWidth = xaxis(2) - xaxis(1)                ! Area of each bin (bins have equal width)
+    do Loop1=1,bins
+       write(Unum,( Form)) xaxis(Loop1) , Data(Loop1)/( Sum(Data) * BinWidth )
+    end do
+
+   end subroutine PrintData
   
   character(len=20) function str(k)                  ! function to change an integer to a string, used in FileNamer subroutine
      integer, intent(in) :: k
@@ -810,9 +854,7 @@ program AndersonHubbard
      
 
                !----------------------------Coding Tools-------------------------------------
-     real BinWidth                                       ! Width of the DoS bins for the purposes of normalization
      integer Loop1,i                                       ! Loop Integer
-     character(len=25) filename                          ! Base file name to be put into FileNamer
      real :: start, finish, TIME                         ! Used to keep track of CPU time and prints to screen at the end
 
      
@@ -828,52 +870,16 @@ program AndersonHubbard
   
 
      !----------------------------Opening files------------------------------------
-     do i = 1,DOSCl+1
-	if ( DOSCl .eq. 0 ) EXIT  
-        filename = "DoS"//trim(str(i))//""
-        filename = FileNamer(filename)
-        open (unit = 100+i, file = filename ,status ='unknown' )
-        
-        !Comments for the file above, says whats in the file and which parameters go with the data
-        write(100+i,*) "#This file contains the density of states for the ensemble. First column is", & 
-             "# right edge of bin, fraction of contributions per bin"
-        write(100+i,*) "#Size of clusters = #", i
-        write(100+i,*) "#Disorder Strength = ", DELTA
-        write(100+1,*) "#Bond Cutoff = ", bond_cutoff
-        write(100+i,*) "#Interaction strength = ", uSite
-        write(100+i,*) "#Dimensions = ", dim
-        write(100+i,*) "#Number of systems = ", systemn
-       
-     end do
+     do i = 1,DOSCl
+     if ( DOSCl .eq. 0 ) EXIT
+     CALL OpenFile( 100+i, "DoS"//trim(str(i))//"_" , "Density of States in clusters of size"//trim(str(i+1))//"", &
+          "Right-edge of bin", "DOS" )
+  end do
   
-     
-     filename = "DoS"
-     filename = FileNamer(filename)
-     open (unit = 100, file = filename ,status ='unknown' )
-     
-     !Comments for the file above, says whats in the file and which parameters go with the data
-     write(100,*) "#This file contains the density of states for the ensemble. First column is", & 
-          "# right edge of bin,second is fraction of contributions per bin"
-     write(100,*) "#This is the DOS with 0 hopping between every site ", &
-           "#(aka an ensemble of two site clusters)", &
-          "#This uses the Diag module to diagonalize the clusters"
-     write(100,*) "#Disorder Strength = ", DELTA
-     write(100,*) "#Bond Cutoff = ", bond_cutoff
-     write(100,*) "#Interaction strength = ", uSite
-     write(100,*) "#Dimensions = ", dim
-     write(100,*) "#Number of systems = ", systemn
+  CALL OpenFile( 100, "DoS" , "Total Density of States", "Right-edge of bin", "DOS" )
   
-!     filename = "Potential"
-!     filename = FileNamer(filename)
-!     open (unit = 200, file = filename ,status ='unknown' )
-     
-     !Comments for the file above, says whats in the file and which parameters go with the data
-!     write(200,*) "#This file contains the distribution of site potentials found in single site clusters"
-!     write(200,*) "#Disorder Strength = ", DELTA
-!     write(200,*) "#Bond Cutoff = ", bond_cutoff
-!     write(200,*) "#Interaction strength = ", uSite
-!     write(200,*) "#Dimensions = ", dim
-!     write(200,*) "#Number of systems = ", systemn
+  CALL OpenFile( 200, "Potential", "Site-Potential Distribution", "Right-edge of bin", "Distribution")
+  
      call init_random_seed()
      
      SitesIgnored = 0
@@ -898,22 +904,13 @@ program AndersonHubbard
         call Full_DoS( SitePotential, Hopping, Bonds, WeakBonds, SitesIgnored )
      end do
      CALL CPU_TIME(finish)
-     BinWidth = BinsDoS(2) - BinsDoS(1)                ! Area of each bin (bins have equal width)
-     do i=0,DOSCl
-        if ( (i .eq. 0) .and. (i .eq. DOSCl) .and. (Loop1 .eq. bins) ) CYCLE
-        do Loop1=1,bins
-           write(100+i,400) BinsDoS(Loop1) , DoS(Loop1,i+1)/( Sum(DoS(:,i+1)) * BinWidth )
-           print*, BinsDoS(Loop1)
-        end do
-     end do
-	print*, BinsDoS
-     
-     BinWidth = BinsPot(2) - BinsPot(1)
-     !print*, Potential
-     !print*, DroppedPot
-     !do Loop1=1,bins
-     !   write(200,400) BinsPot(Loop1) , Potential(Loop1)/( Sum(Potential) * BinWidth )
-     !end do
+      do i=0,DOSCl
+     if ( (Loop1 .eq. bins) .and. (i .eq. 0) ) EXIT
+     CALL PrintData( 100+i, '(g12.5,g12.5)', BinsDoS, DoS )
+  end do
+  print*, BinsDoS
+  
+  !CALL PrintData( 200, '(g12.5,g12.5)', BinsPot, Potential )
      
      TIME = finish - start
      print*, "Sites in large clusters: ", SitesIgnored, " out of", n_d
@@ -927,7 +924,7 @@ program AndersonHubbard
           int(TIME/real(86400)), mod(int(TIME/real(3600)),24), mod(int(TIME/real(60)),60), mod(int(TIME),60)
   
 !300  format(  i10, g12.5)                               ! Format for ( integer , real ) file
-400  format( g12.5, g12.5)                               ! Format for ( real , real ) file
+!400  format( g12.5, g12.5)                               ! Format for ( real , real ) file
 	 
    end program AndersonHubbard
 		

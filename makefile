@@ -11,15 +11,17 @@ FLAGS =  -g -fcheck=all -Wall
 LIBS = -llapack
 
 # Define date
-DD = 180330
-DOS.e: $(DD)Diag.o $(DD)main.o
-	$(CC) $(FLAGS) $(DD)Diag.o $(DD)main.o $(LIBS) -o DOS.e
+DOS.e: Diag.o main.o
+	$(CC) $(FLAGS) Diag.o main.o $(LIBS) -o DOS.e
 
-$(DD)Diag.o: $(DD)Diag.f90 
-	$(CC) $(FLAGS) -c $(DD)Diag.f90
+Diag.o: Diag.f90 
+	$(CC) $(FLAGS) -c Diag.f90
 
-$(DD)main.o: $(DD)main.f90 $(DD)Diag.o
-	$(CC) $(FLAGS) -c $(DD)main.f90
+main.o: main.f90 Diag.o
+	$(CC) $(FLAGS) -c main.f90
 
 clean:
 	rm -f *.o *.mid *~
+
+endall:
+	rm *.text
