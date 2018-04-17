@@ -1,3 +1,4 @@
+#This file tells github which files should be ignored when committing
 # Prerequisites
 *.d
 
@@ -30,3 +31,7 @@
 *.exe
 *.out
 *.app
+*.e
+
+# Random
+*.dSYM
