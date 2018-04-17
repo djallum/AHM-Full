@@ -1,0 +1,174 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{multicol}
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{caption}
+\usepackage{listings} %for lstlisting
+\usepackage{enumitem}
+
+\textwidth = 6.5 in
+\textheight = 9.3 in
+\oddsidemargin = 0.0 in
+\evensidemargin = 0.0 in
+\topmargin = -0.3 in
+\headheight = 0.0 in
+\headsep = 0.0 in
+\parskip = 0.2 in
+\parindent = 0.0 in
+%\titlespacing\section{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+
+%For Pictures
+
+%for abstract
+
+\begin{document}
+{\bf \Large Bench Marking}
+
+In this file I include the CPU times calculated from different pieces of code for different purposes. Each section is a different purpose and from within each the parameters are varied. The start and end times are times extracted from the CPU in some way. Only differences matter, like with potential energy.
+
+These are all bench marked on Otter
+\section{ Ensembles of system's of $N$ sites}
+
+\begin{enumerate}
+
+\item $N = 1$
+
+\begin{lstlisting}
+W = 10
+U = 6
+Mu = 3
+t = 1
+systems = 1000
+Time << 1 second
+Started (s): 3.83600E-3
+Ended (s): 2.51470E-2
+Difference (s): 2.13110E-2
+
+systems = 10,000
+Started (s): 3.7820E-3
+Ended (s): 0.17492
+Difference (s): 0.17113
+
+systems = 100,000
+Started (s): 3.6350E-3
+Ended (s): 1.72347
+Difference (s): 1.71983
+
+systems = 1,000,000
+Started (s): 3.49600E-3
+Ended (s): 17.0995255
+Difference (s): 17.0960293
+\end{lstlisting}
+
+Based on these results the per single-site cluster time appears to be approximately $1.71\cdot 10^{-6}~\mbox{s}$
+
+\item $N = 2$
+
+\begin{lstlisting}
+W = 10
+U = 6
+Mu = 3
+t = 1
+systems = 1000
+Started (s): 3.5730E-3
+Ended (s): 0.10496
+Difference (s): 0.10138
+
+systems = 10,000
+Time \tilde 1 second
+Started (s): 3.45500E-3
+Ended (s):  0.94636
+Difference (s): 0.94290
+
+systems = 100,000
+Started (s): 3.70700E-03
+Ended (s): 9.67840
+Difference (s): 9.67470
+
+systems = 1,000,000
+Started (s): 3.66800E-3
+Ended (s): 95.09273
+Difference (s): 95.0890579
+\end{lstlisting}
+
+Average per two-site cluster: $9.51\cdot 10^{-6}~\mbox{s}$
+
+\item $N = 3$
+
+\begin{lstlisting}
+W = 10
+U = 6
+Mu = 3
+t = 1
+systems = 10,000
+Started (s): 3.2700E-3
+Ended (s):  4.25241
+Difference (s): 4.24911
+
+systems = 100,000
+Started (s): 3.56400E-3
+Ended (s): 42.28640
+Difference (s): 42.28284
+
+systems = 1,000,000
+Started (s): 3.34100E-3
+Ended (s): 413.15033
+Difference (s): 413.14700
+\end{lstlisting}
+
+Average per three-site cluster: $4.13\cdot 10^{-4}~\mbox{s}$ 
+
+\item $N = 4$
+
+\begin{lstlisting}
+W = 10
+U = 6
+Mu = 3
+t = 1
+systems = 10,000
+Started (s): 2.80200E-3
+Ended (s):  33.46545
+Difference (s): 33.46265
+
+systems = 100,000
+Started (s): 2.73100E-3
+Ended (s): 336.37988
+Difference (s): 366.37717
+
+systems = 1,000,000
+Started (s): 
+Ended (s): 
+Difference (s): 
+\end{lstlisting}
+
+Average per four-site cluster: 
+
+\item $N = 5$
+
+\begin{lstlisting}
+W = 10
+U = 6
+Mu = 3
+t = 1
+systems = 10,000
+Started (s): 
+Ended (s):  
+Difference (s): 
+
+systems = 100,000
+Started (s): 
+Ended (s): 
+Difference (s): 
+
+systems = 1,000,000
+Started (s): 
+Ended (s): 
+Difference (s): 
+\end{lstlisting}
+
+Average per five-site cluster: 
+
+\end{enumerate}
+\end{document}

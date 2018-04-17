@@ -1,0 +1,7 @@
+ #This file contains the density of states for the ensemble. First column is
+  right edge of bin, fraction of contributions per bin
+ #Disorder Strength =    10.00000    
+ #Bond Cutoff =   0.2000000    
+ #Interaction strength =    12.00000    
+ #Dimensions =         1000
+ #Number of systems =        10000
